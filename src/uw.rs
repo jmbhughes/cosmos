@@ -1,16 +1,26 @@
 use ndarray::{Array2};
 use ndarray_conv::*;
+use bevy::{prelude::*, sprite::MaterialMesh2dBundle};
 
 
+#[derive(Resource)]
 pub struct UlamWarburtonCA {
-    num_rows: usize,
-    num_cols: usize,
+    pub num_rows: usize,
+    pub num_cols: usize,
     grid: Array2<u8>
 }
 
 impl UlamWarburtonCA {
     pub fn new(rows: usize, cols: usize) -> Self {
         Self {num_rows: rows, num_cols: cols, grid: Array2::zeros((rows, cols))}
+    }
+
+    pub fn get_dim(self) -> (usize, usize) {
+        (self.num_rows, self.num_cols)
+    }
+
+    pub fn get(&self, row: usize, col: usize) -> u8 {
+        self.grid[[row, col]]
     }
 
     pub fn set(&mut self, row: usize, col: usize) {
