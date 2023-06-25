@@ -1,33 +1,63 @@
 mod uw;
 
+use std::cmp;
 use std::cell;
+use std::time::Duration;
 
-use bevy::{prelude::*, sprite::MaterialMesh2dBundle};
+use bevy::{prelude::*, 
+    sprite::MaterialMesh2dBundle,
+    window::{CursorGrabMode, PresentMode, WindowLevel}};
 
-const PIXELS_PER_SIDE: u8 = 5;
+const PIXELS_PER_SIDE: usize = 5;
 const ACTIVE_COLOR: Color = Color::rgb(0.25, 0.25, 0.75);
 const DEAD_COLOR: Color = Color::rgb(0.1, 0.1, 0.1);
-const NUM_ROWS: usize = 100;
-const NUM_COLS: usize = 100;
+const NUM_ROWS: usize = 200;
+const NUM_COLS: usize = 200;
+const SPEED_MILLIS: u64 = 100;
 
 
 fn main() {
-    let mut ca = uw::UlamWarburtonCA::new(NUM_ROWS, NUM_COLS);
-    ca.set(49, 49);
-    ca.set(80, 80);
+    let mut ca = uw::AdvancedUlamWarburtonCA::new(NUM_ROWS, NUM_COLS, 5, 1);
+    ca.set(99, 99);
+    ca.set(100, 99);
+    ca.set(98, 99);
+    ca.set(99, 100);
+    ca.set(99, 98);
+
+    let window_size: f32 = (cmp::max(NUM_ROWS, NUM_COLS) * PIXELS_PER_SIDE) as f32;
 
     App::new()
-        .add_plugins(DefaultPlugins)
+        .add_plugins(DefaultPlugins.set(WindowPlugin {
+            primary_window: Some(Window {
+                title: "Cosmos".into(),
+                resolution: (window_size, window_size).into(),
+                ..default()
+            }),
+            ..default()
+        }))
         .add_startup_system(setup)
         .insert_resource(ca)
+        .insert_resource(UpdateTimer { timer: Timer::new(Duration::from_millis(SPEED_MILLIS), TimerMode::Repeating)})
         .add_system(visualize)
         .add_system(step_ca)
         .run();
 }
 
-fn step_ca(mut ca: ResMut<uw::UlamWarburtonCA>
+#[derive(Resource)]
+struct UpdateTimer {
+    timer: Timer,
+}
+
+fn step_ca(mut ca: ResMut<uw::AdvancedUlamWarburtonCA>, 
+    mut update_timer: ResMut<UpdateTimer>,
+    time: Res<Time>,
 ) {
-    ca.step();
+    // tick the timer
+    update_timer.timer.tick(time.delta());
+
+    if update_timer.timer.finished() {
+        ca.step();
+    }
 }
 
 #[derive(Component)]
@@ -40,7 +70,7 @@ fn visualize(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<ColorMaterial>>,
-    mut ca: ResMut<uw::UlamWarburtonCA>,
+    mut ca: ResMut<uw::AdvancedUlamWarburtonCA>,
     mut cell_query: Query<(&Cell, &mut Sprite,  &Transform)>,
 ) {
     for (cell, mut sprite, transform) in cell_query.iter_mut() {
@@ -73,8 +103,8 @@ fn setup(
                     ..default()
                 },
                 transform: Transform::from_translation(Vec3::new(
-                    i as f32 * PIXELS_PER_SIDE as f32 - (NUM_ROWS) as f32, 
-                    j as f32 * PIXELS_PER_SIDE as f32 - (NUM_COLS) as f32,
+                    i as f32 * PIXELS_PER_SIDE as f32 - ((NUM_ROWS * PIXELS_PER_SIDE) as f32 / 2.0), 
+                    j as f32 * PIXELS_PER_SIDE as f32 - ((NUM_COLS * PIXELS_PER_SIDE) as f32 / 2.0),
                     0.)),
                 ..default()
             }));
