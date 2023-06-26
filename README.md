@@ -6,6 +6,10 @@ Currently, it supports a version of the [Ulam-Warburton automaton](https://en.wi
 It has similar rules to the core Ulam Warburton automaton, but it also has a death timer that forces active cells to die and become inactive after being on for a configurable duration. 
 Once a cell is off, it must wait a configurable duration before it can turn back on. This makes more interesting patterns than the base Ulam Warburton automaton. 
 
+## To run
+1. Download the repo
+2. Run `cargo run`
+
 ## TODO
 - [x] Implement Advanced Ulam Warburton
 - [x] Make Bevy preview
